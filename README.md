@@ -8,12 +8,19 @@ problems. Includes mini-games and progress tracking.
 
 ## How it works
 
+- **Whisker's School** — Teacher Whisker gives an interactive lesson on any
+  times table (1–12): what "times N" means, tap-to-reveal skip-counting
+  stones, a memory trick or mnemonic for that table (including the ×9 finger
+  trick, fully interactive), and three gentle practice problems with
+  encouragement. All zones are unlocked from the start, so she can play any
+  level — the school is there whenever a table feels tough.
+
 - **Adventure mode** — walk Whisker around each zone with the arrow keys (or
-  the on-screen d-pad on tablets). Each zone covers two times tables (×1–×12)
-  and has its own terrain and four friendly characters who each ask two
-  multiplication questions. Answer them to collect the zone's items
-  (sunflowers, acorns, seashells...) — earn all four to open the door and
-  finish the zone. Up to 3 stars per zone; 1 star unlocks the next zone.
+  the on-screen d-pad on tablets), rendered as a 3D tilted-board diorama.
+  Each zone covers two times tables (×1–×12) and has its own terrain and four
+  friendly characters who each ask two multiplication questions. Answer them
+  to collect the zone's items (sunflowers, acorns, seashells...) — earn all
+  four to open the door and finish the zone. Up to 3 stars per zone.
 - **Adaptive practice** — facts answered wrong come back more often; a fact is
   "mastered" after 3 first-try correct answers in a row.
 - **Hints** — a wrong answer shows the fact as rows of paw prints

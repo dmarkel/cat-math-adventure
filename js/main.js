@@ -9,11 +9,8 @@ const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 function saveNow() { Engine.save(state, localStorage); }
 
-function zoneUnlocked(i) {
-  if (i === 0) return true;
-  const prev = state.zones[ZONES[i - 1].id];
-  return !!prev && prev.stars >= 1;
-}
+// All zones are open from the start — she picks whatever she wants to play.
+function zoneUnlocked() { return true; }
 
 function totalStars() {
   return ZONES.reduce((s, z) => s + ((state.zones[z.id] || {}).stars || 0), 0);
@@ -105,6 +102,13 @@ function renderMap() {
   app.innerHTML = `
     <div class="screen screen-map">
       ${header(`${state.name}'s Adventure Map`, 'title')}
+      <button class="school-card" id="schoolBtn">
+        <span class="school-card-cat">${catSVG('teacher', 84)}</span>
+        <span class="school-card-text">
+          <span class="zone-name">🎓 Whisker’s School</span>
+          <span class="zone-tables">Learn tricks for any times table!</span>
+        </span>
+      </button>
       <div class="map-trail">${stops}</div>
       <div class="map-extras">
         <h3>Mini-Games <span class="hint-text">(earn extra fish treats!)</span></h3>
@@ -116,6 +120,7 @@ function renderMap() {
     </div>`;
   document.querySelectorAll('.zone-stop:not(.locked)').forEach((b) =>
     b.addEventListener('click', () => { Sound.play('tap'); startZone(b.dataset.zone); }));
+  $('#schoolBtn').addEventListener('click', () => { Sound.play('tap'); showScreen('school'); });
   $('#fishBtn').addEventListener('click', () => { Sound.play('tap'); startFishFrenzy(); });
   $('#matchBtn').addEventListener('click', () => { Sound.play('tap'); startKittenMatch(); });
   wireCommon();
@@ -178,6 +183,7 @@ function showScreen(name) {
   if (name === 'title') renderTitle();
   else if (name === 'map') renderMap();
   else if (name === 'progress') renderProgress();
+  else if (name === 'school') renderSchool();
 }
 
 renderTitle();

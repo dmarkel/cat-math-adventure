@@ -177,6 +177,56 @@ const ZONES = [
   },
 ];
 
+/* Whisker's School: one lesson per table. `trick` lines are shown one by one.
+   `widget: 'fingers'` adds the interactive ×9 finger-trick. */
+const LESSONS = {
+  1:  { trick: ['×1 is the MIRROR table — any number times 1 is just itself!',
+                '1 × 8 = 8. 1 × 12 = 12. The number looks in the mirror and sees... itself! 🪞'],
+        example: [1, 8] },
+  2:  { trick: ['×2 means DOUBLES — just add the number to itself!',
+                '2 × 7 is 7 + 7 = 14. If you can add, you can do the whole twos table! 👯'],
+        example: [2, 7] },
+  3:  { trick: ['×3 is DOUBLE PLUS ONE MORE!',
+                '3 × 6: double 6 is 12... then add one more 6 to get 18!',
+                'Try skip-counting out loud with a beat: 3, 6, 9, 12 — it’s a song! 🎵'],
+        example: [3, 6] },
+  4:  { trick: ['×4 is the DOUBLE-DOUBLE! Double the number... then double it again!',
+                '4 × 6: double 6 is 12, double 12 is 24. Two quick doubles! 🍔🍔'],
+        example: [4, 6] },
+  5:  { trick: ['Every ×5 answer ends in 5 or 0 — no exceptions!',
+                'Count by 5s like minutes on a clock: 5, 10, 15, 20...',
+                'Big number? ×5 is HALF of ×10. 5 × 8: 10 × 8 = 80, half is 40! ⏰'],
+        example: [5, 8] },
+  6:  { trick: ['×6 is ×5 plus ONE MORE GROUP. 6 × 7: five 7s are 35, plus 7 is 42!',
+                'Secret pattern: 6 × an EVEN number ends in that same number! 6×2=12, 6×4=24, 6×8=48 — the answer ends with the number you multiplied! 🕵️'],
+        example: [6, 7] },
+  7:  { trick: ['Sneaky sevens! Use the TURN-AROUND trick: 7 × 3 is the same as 3 × 7 — pick the table you know best!',
+                'And remember the famous one: 5, 6, 7, 8 → “56 = 7 × 8”! 🎲'],
+        example: [7, 8] },
+  8:  { trick: ['×8 is the DOUBLE-DOUBLE-DOUBLE! Three doubles in a row!',
+                '8 × 5: 5 → 10 → 20 → 40. Whoosh!',
+                'And the silly rhyme: “I ate and ate ’til I was sick on the floor — 8 times 8 is 64!” 🤢'],
+        example: [8, 8] },
+  9:  { trick: ['Nines have FINGER MAGIC — your hands know the whole table! Try it below! 🖐️🖐️',
+                'Double-check trick: the digits of every ×9 answer add up to 9! 27 → 2+7=9, 54 → 5+4=9!'],
+        example: [9, 7], widget: 'fingers' },
+  10: { trick: ['The easiest table in the world: just hang a ZERO on the end!',
+                '10 × 7 = 70. 10 × 12 = 120. Done before you blink! 😎'],
+        example: [10, 7] },
+  11: { trick: ['×11 makes TWIN numbers! 11 × 4 = 44. 11 × 7 = 77. Twins up through 9!',
+                'For the big ones, split it: 11 × 12 = (10 × 12) + 12 = 132. 👯‍♀️'],
+        example: [11, 4] },
+  12: { trick: ['×12 = ×10 plus ×2 — split it into two easy jobs!',
+                '12 × 6: ten 6s are 60, two 6s are 12... 60 + 12 = 72! ✂️'],
+        example: [12, 6] },
+};
+
+const TEACHER_PRAISE = [
+  'You’re getting so strong at this!', 'Look at that brain go! 🧠',
+  'Whisker is doing a happy dance!', 'That was QUICK! Amazing!',
+  'You’ll be teaching ME soon!', 'Gold star thinking! ⭐',
+];
+
 const PRAISE = [
   'Purr-fect!', 'Paw-some job!', 'Meow-nificent!', 'You’re a star!',
   'Whisker is so proud!', 'Cat-tastic!', 'Super smart!', 'Brilliant!',

@@ -1,13 +1,26 @@
 /* Whisker the cat: an SVG with moods, plus tiny sound + confetti helpers. */
 
 function catSVG(mood = 'happy', size = 160) {
-  // moods: happy, excited, thinking, sleepy
+  // moods: happy, excited, thinking, sleepy, teacher
   const mouth = {
     happy:    '<path d="M72 96 q8 8 16 0" class="cat-line"/>',
     excited:  '<path d="M70 94 q10 14 20 0 z" fill="#a8503c"/>',
     thinking: '<path d="M74 98 h12" class="cat-line"/>',
     sleepy:   '<path d="M72 98 q8 5 16 0" class="cat-line"/>',
+    teacher:  '<path d="M72 96 q8 8 16 0" class="cat-line"/>',
   }[mood];
+  const teacherExtras = mood !== 'teacher' ? '' : `
+    <g class="cat-glasses">
+      <circle cx="65" cy="76" r="11" fill="none" stroke="#3d2b1f" stroke-width="2.5"/>
+      <circle cx="95" cy="76" r="11" fill="none" stroke="#3d2b1f" stroke-width="2.5"/>
+      <path d="M76 76 h8" class="cat-line" stroke-width="2.5"/>
+    </g>
+    <g class="cat-cap">
+      <path d="M80 30 L116 42 L80 54 L44 42 Z" fill="#4a3326"/>
+      <path d="M80 36 L102 43 L80 50 L58 43 Z" fill="#5d4434"/>
+      <path d="M112 44 v14" class="cat-line" stroke="#4a3326" stroke-width="2.5"/>
+      <circle cx="112" cy="61" r="3.5" fill="#f9a826"/>
+    </g>`;
   const eyes = mood === 'sleepy'
     ? '<path d="M58 76 q7 6 14 0 M88 76 q7 6 14 0" class="cat-line"/>'
     : `<g class="cat-eyes">
@@ -51,6 +64,7 @@ function catSVG(mood = 'happy', size = 160) {
     <!-- paws -->
     <ellipse cx="62" cy="146" rx="11" ry="7" fill="#f4a95c"/>
     <ellipse cx="98" cy="146" rx="11" ry="7" fill="#f4a95c"/>
+    ${teacherExtras}
   </svg>`;
 }
 

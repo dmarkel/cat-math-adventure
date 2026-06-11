@@ -39,9 +39,9 @@ function renderWorld() {
     for (let x = 0; x < W; x++) {
       const c = grid[y][x];
       const alt = (x + y) % 2 ? ' alt' : '';
-      if (c === '#') tiles += `<div class="tile block${alt}"><span>${zone.blockEmoji}</span></div>`;
+      if (c === '#') tiles += `<div class="tile block${alt}"><span class="stand">${zone.blockEmoji}</span></div>`;
       else if (c === '~') tiles += `<div class="tile water${alt}"></div>`;
-      else if (c === 'G') tiles += `<div class="tile gate${alt}" id="gateTile"><span>🚪</span></div>`;
+      else if (c === 'G') tiles += `<div class="tile gate${alt}" id="gateTile"><span class="stand">🚪</span></div>`;
       else if (c === ',') tiles += `<div class="tile${alt}"><span class="decor">${zone.decorEmoji}</span></div>`;
       else tiles += `<div class="tile${alt}"></div>`;
     }
@@ -49,7 +49,7 @@ function renderWorld() {
 
   const sprites = chars.map((ch) => `
     <button class="sprite char" id="char-${ch.idx}" style="--x:${ch.x};--y:${ch.y}"
-            aria-label="${ch.name}">${ch.emoji}</button>`).join('');
+            aria-label="${ch.name}"><span class="stand">${ch.emoji}</span></button>`).join('');
 
   app.innerHTML = `
     <div class="screen screen-world" style="--zone-color:${zone.color}">
@@ -58,11 +58,13 @@ function renderWorld() {
         <span class="chip" id="itemChip">${zone.item.emoji} 0 / ${chars.length}</span>
         <span class="hint-text">Walk with arrow keys — visit every friend, then head to the door! 🚪</span>
       </div>
-      <div class="world" id="worldBox"
-           style="--cols:${W};--rows:${H};--ground:${zone.ground};--ground-alt:${zone.groundAlt};--water:${zone.water}">
-        <div class="tiles">${tiles}</div>
-        ${sprites}
-        <div class="sprite cat-sprite" id="catSprite" style="--x:${cat.x};--y:${cat.y}">${catSVG('happy', 64)}</div>
+      <div class="world-scene" id="worldScene">
+        <div class="world" id="worldBox"
+             style="--cols:${W};--rows:${H};--ground:${zone.ground};--ground-alt:${zone.groundAlt};--water:${zone.water}">
+          <div class="tiles">${tiles}</div>
+          ${sprites}
+          <div class="sprite cat-sprite" id="catSprite" style="--x:${cat.x};--y:${cat.y}"><span class="stand">${catSVG('happy', 64)}</span></div>
+        </div>
       </div>
       <div class="dpad">
         <button class="dpad-btn up" data-dir="0,-1">▲</button>
@@ -139,7 +141,7 @@ function toast(msg) {
   const el = document.createElement('div');
   el.className = 'toast';
   el.textContent = msg;
-  document.getElementById('worldBox').appendChild(el);
+  document.getElementById('worldScene').appendChild(el);
   setTimeout(() => el.remove(), 2200);
 }
 
@@ -277,7 +279,7 @@ function completeChar(char) {
 
   const sprite = document.getElementById(`char-${char.idx}`);
   sprite.classList.add('done');
-  sprite.insertAdjacentHTML('beforeend', `<span class="item-pop">${zone.item.emoji}</span>`);
+  sprite.querySelector('.stand').insertAdjacentHTML('beforeend', `<span class="item-pop">${zone.item.emoji}</span>`);
   document.getElementById('itemChip').textContent = `${zone.item.emoji} ${session.items} / ${chars.length}`;
 
   if (session.items >= chars.length) {
