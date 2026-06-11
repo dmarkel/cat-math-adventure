@@ -1,4 +1,10 @@
-/* Zone definitions and story flavor text. */
+/* Zone definitions: times tables, tile maps, terrain, characters, items.
+
+   Map legend (every row is 14 tiles, 10 rows per zone):
+     #  blocked terrain (trees, rocks, coral...)   ~  water / hazard (blocked)
+     ,  walkable ground with decoration            .  walkable ground
+     S  Whisker's start    G  the zone gate    1-4  characters
+*/
 
 const ZONES = [
   {
@@ -7,13 +13,26 @@ const ZONES = [
     emoji: '🌻',
     tables: [1, 2],
     color: '#f9a826',
-    intro: 'Whisker wakes up in a meadow full of sunflowers. Time to explore!',
-    obstacles: [
-      'A gate of sunflowers blocks the path!',
-      'A friendly bunny wants to play a number game!',
-      'Butterflies spell out a puzzle in the air!',
-      'A wobbly bridge needs the magic number to hold!',
-      'A ladybug asks for help counting her spots!',
+    ground: '#b5dd8a', groundAlt: '#aad47e', water: '#7ec8e3',
+    blockEmoji: '🌳', decorEmoji: '🌼',
+    item: { emoji: '🌻', name: 'sunflower', plural: 'sunflowers' },
+    map: [
+      '##############',
+      '#.S..,...##..#',
+      '#....1.......#',
+      '#,##......,..#',
+      '#....~~~..2..#',
+      '#.,..~~~.....#',
+      '#3......##..,#',
+      '#..,.....4...#',
+      '#......,....G#',
+      '##############',
+    ],
+    characters: [
+      { emoji: '🐰', name: 'Pip the Bunny', line: 'I hop in twos all day! Solve my puzzles for a sunflower!' },
+      { emoji: '🐞', name: 'Dot the Ladybug', line: 'Help me count my spots and the sunflower is yours!' },
+      { emoji: '🦋', name: 'Flutter the Butterfly', line: 'I flutter by with a puzzle just for you!' },
+      { emoji: '🐝', name: 'Buzz the Bee', line: 'Buzz buzz! Answer my riddles, sweet as honey!' },
     ],
   },
   {
@@ -22,13 +41,26 @@ const ZONES = [
     emoji: '🌲',
     tables: [3, 4],
     color: '#5b9c4a',
-    intro: 'The woods are shady and full of secrets. Whisker pads in bravely.',
-    obstacles: [
-      'A wise old owl hoots a riddle from a branch!',
-      'Tangled vines block the trail!',
-      'A squirrel will trade acorns for the right answer!',
-      'Mysterious paw prints lead to a number lock!',
-      'A hollow log echoes with a math question!',
+    ground: '#8fbf6e', groundAlt: '#85b765', water: '#6db5d8',
+    blockEmoji: '🌲', decorEmoji: '🍂',
+    item: { emoji: '🌰', name: 'acorn', plural: 'acorns' },
+    map: [
+      '##############',
+      '#S...#..2..#.#',
+      '#.,#...##....#',
+      '#...1....#.,.#',
+      '##..#..,...#.#',
+      '#..,...#.3...#',
+      '#.#...#....#.#',
+      '#...#..,#....#',
+      '#.4....#....G#',
+      '##############',
+    ],
+    characters: [
+      { emoji: '🦉', name: 'Professor Hoot', line: 'Hoo-hoo! A wise cat learns the threes and fours!' },
+      { emoji: '🐿️', name: 'Nutmeg the Squirrel', line: 'I trade acorns for answers — best deal in the woods!' },
+      { emoji: '🦊', name: 'Fern the Fox', line: 'A clever fox loves a clever cat. Try this!' },
+      { emoji: '🦔', name: 'Pokey the Hedgehog', line: 'Don’t get stuck — my puzzles are sharp!' },
     ],
   },
   {
@@ -37,13 +69,26 @@ const ZONES = [
     emoji: '🏖️',
     tables: [5, 6],
     color: '#2aa5a0',
-    intro: 'Waves splash and berries grow right by the sand. Whisker loves it here!',
-    obstacles: [
-      'A crab snaps a tricky question with its claws!',
-      'A message in a bottle holds a puzzle!',
-      'Stepping stones across a tide pool need the magic number!',
-      'A seagull guards the berry bush with a riddle!',
-      'A sandcastle door only opens for the right answer!',
+    ground: '#f2dba8', groundAlt: '#edd49b', water: '#62b6d9',
+    blockEmoji: '🪨', decorEmoji: '🐚',
+    item: { emoji: '🐚', name: 'seashell', plural: 'seashells' },
+    map: [
+      '##############',
+      '#.S....,..1..#',
+      '#...,........#',
+      '#~~~....##...#',
+      '#~~2..,....,.#',
+      '#~~~~...3....#',
+      '#~~~~~.....#.#',
+      '#...~~~..,...#',
+      '#.4........G.#',
+      '##############',
+    ],
+    characters: [
+      { emoji: '🦀', name: 'Snappy the Crab', line: 'Snip snap! Count by fives or I’ll pinch your toes!' },
+      { emoji: '🐢', name: 'Shelly the Turtle', line: 'Slow and steady solves the puzzle every time.' },
+      { emoji: '🐬', name: 'Splash the Dolphin', line: 'Eee-ee! Splash into this one!' },
+      { emoji: '🦜', name: 'Coco the Parrot', line: 'Squawk! Coco wants an ANSWER! Squawk!' },
     ],
   },
   {
@@ -52,13 +97,26 @@ const ZONES = [
     emoji: '🍄',
     tables: [7, 8],
     color: '#c0564f',
-    intro: 'Glowing mushrooms light the hollow. These are the trickiest tables — Whisker believes in you!',
-    obstacles: [
-      'A giant mushroom won’t budge without the answer!',
-      'Fireflies blink out a number puzzle!',
-      'A grumpy toad guards the mossy path!',
-      'A ring of toadstools hides a secret code!',
-      'A glowworm lights the way — for a price!',
+    ground: '#a98fc0', groundAlt: '#a187b8', water: '#5f87b8',
+    blockEmoji: '🍄', decorEmoji: '✨',
+    item: { emoji: '🍄', name: 'glow-shroom', plural: 'glow-shrooms' },
+    map: [
+      '##############',
+      '#..#..S...#..#',
+      '#.1...,..#...#',
+      '#...##.......#',
+      '#,..#..2..,#.#',
+      '#......##....#',
+      '#.#.3....#...#',
+      '#....,#...4..#',
+      '#.#.......G..#',
+      '##############',
+    ],
+    characters: [
+      { emoji: '🐸', name: 'Croaky the Toad', line: 'Ribbit! The sevens and eights are tricky — but so are you!' },
+      { emoji: '🐌', name: 'Doodle the Snail', line: 'Take your time... I always do...' },
+      { emoji: '🪲', name: 'Glow the Beetle', line: 'My light shines for smart explorers!' },
+      { emoji: '🐛', name: 'Inch the Caterpillar', line: 'Inch by inch, you’ll get it!' },
     ],
   },
   {
@@ -67,13 +125,26 @@ const ZONES = [
     emoji: '💎',
     tables: [9, 10],
     color: '#6f5fb5',
-    intro: 'Crystals sparkle in every color. Whisker’s eyes go wide!',
-    obstacles: [
-      'A crystal door is sealed with a number lock!',
-      'A sleepy bat mumbles a math riddle!',
-      'Gems light up — but only for the right answer!',
-      'An echo asks the same question three times!',
-      'A treasure chest needs the magic number!',
+    ground: '#9aa3c2', groundAlt: '#929bbb', water: '#4f6fa8',
+    blockEmoji: '🪨', decorEmoji: '🔮',
+    item: { emoji: '💎', name: 'crystal', plural: 'crystals' },
+    map: [
+      '##############',
+      '#S..#...,..#.#',
+      '#..#...1.....#',
+      '#,....##..,#.#',
+      '#..2.....#...#',
+      '####.,..3....#',
+      '#....#.....#,#',
+      '#.,...#..4...#',
+      '#..#......G..#',
+      '##############',
+    ],
+    characters: [
+      { emoji: '🦇', name: 'Echo the Bat', line: 'Echo... echo... answer my riddle... riddle...' },
+      { emoji: '🐭', name: 'Pebble the Mouse', line: 'Squeak! I hid a crystal just for you!' },
+      { emoji: '🕷️', name: 'Webster the Spider', line: 'I spin webs AND number puzzles!' },
+      { emoji: '🐉', name: 'Spark the Dragon', line: 'A dragon-sized challenge for a brave little cat!' },
     ],
   },
   {
@@ -82,13 +153,26 @@ const ZONES = [
     emoji: '⭐',
     tables: [11, 12],
     color: '#e2731c',
-    intro: 'The very top of the world! Stars feel close enough to touch.',
-    obstacles: [
-      'A shooting star drops a puzzle from the sky!',
-      'The summit gate glows with a final challenge!',
-      'A cloud spirit whispers a tricky question!',
-      'Starlight spells out a number riddle!',
-      'The grand star door awaits the magic number!',
+    ground: '#e8eef5', groundAlt: '#dfe7f0', water: '#b8d4ea',
+    blockEmoji: '🗻', decorEmoji: '❄️',
+    item: { emoji: '⭐', name: 'star', plural: 'stars' },
+    map: [
+      '##############',
+      '#..S...~~..1.#',
+      '#.,....~~....#',
+      '#...2......,.#',
+      '#~~....##....#',
+      '#~~~..3...~~.#',
+      '#......,..~~.#',
+      '#.#..4.......#',
+      '#.....,....G.#',
+      '##############',
+    ],
+    characters: [
+      { emoji: '🦅', name: 'Gale the Eagle', line: 'Only the sharpest minds reach the summit!' },
+      { emoji: '🐐', name: 'Billy the Goat', line: 'Maaa! I climbed all the way up for this puzzle!' },
+      { emoji: '☁️', name: 'Nimbus the Cloud', line: 'Whoosh... the elevens and twelves float my way...' },
+      { emoji: '🌟', name: 'Twinkle the Star', line: 'Shine bright! This is the final challenge!' },
     ],
   },
 ];
@@ -102,5 +186,3 @@ const ENCOURAGE = [
   'So close! Try once more!', 'Almost! You can do it!',
   'Hmm, not quite — one more try!', 'Whisker believes in you!',
 ];
-
-const QUESTIONS_PER_ZONE = 10;

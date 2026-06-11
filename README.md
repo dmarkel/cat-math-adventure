@@ -8,9 +8,12 @@ problems. Includes mini-games and progress tracking.
 
 ## How it works
 
-- **Adventure mode** — each zone covers two times tables (×1–×12), with story
-  obstacles solved by multiplication. Earn up to 3 stars per zone; 1 star
-  unlocks the next zone.
+- **Adventure mode** — walk Whisker around each zone with the arrow keys (or
+  the on-screen d-pad on tablets). Each zone covers two times tables (×1–×12)
+  and has its own terrain and four friendly characters who each ask two
+  multiplication questions. Answer them to collect the zone's items
+  (sunflowers, acorns, seashells...) — earn all four to open the door and
+  finish the zone. Up to 3 stars per zone; 1 star unlocks the next zone.
 - **Adaptive practice** — facts answered wrong come back more often; a fact is
   "mastered" after 3 first-try correct answers in a row.
 - **Hints** — a wrong answer shows the fact as rows of paw prints
