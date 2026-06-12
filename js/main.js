@@ -114,7 +114,7 @@ function renderMap() {
         <h3>Mini-Games <span class="hint-text">(earn extra fish treats!)</span></h3>
         <div class="minigame-row">
           <button class="btn btn-game" id="fishBtn">🎣 Fish Frenzy</button>
-          <button class="btn btn-game" id="matchBtn">🃏 Kitten Match</button>
+          <button class="btn btn-game" id="dashBtn">🏃 Whisker Dash</button>
         </div>
       </div>
     </div>`;
@@ -122,7 +122,7 @@ function renderMap() {
     b.addEventListener('click', () => { Sound.play('tap'); startZone(b.dataset.zone); }));
   $('#schoolBtn').addEventListener('click', () => { Sound.play('tap'); showScreen('school'); });
   $('#fishBtn').addEventListener('click', () => { Sound.play('tap'); startFishFrenzy(); });
-  $('#matchBtn').addEventListener('click', () => { Sound.play('tap'); startKittenMatch(); });
+  $('#dashBtn').addEventListener('click', () => { Sound.play('tap'); startWhiskerDash(); });
   wireCommon();
 }
 

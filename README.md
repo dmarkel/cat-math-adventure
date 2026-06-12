@@ -26,7 +26,9 @@ problems. Includes mini-games and progress tracking.
 - **Hints** — a wrong answer shows the fact as rows of paw prints
   (e.g. 3 rows of 4), then reveals the answer kindly on a second miss.
 - **Mini-games** — Fish Frenzy (catch the fish with the right answer) and
-  Kitten Match (memory pairs of problems and answers).
+  Whisker Dash (a Geometry-Dash-style runner: jump the blocks, answer the
+  math gate at each checkpoint to keep going; crashes restart from the last
+  gate, never the beginning).
 - **Progress screen** — stars, fish treats, per-table mastery bars, and a
   12×12 fact map (great for parents to check).
 

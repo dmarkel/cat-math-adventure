@@ -100,98 +100,277 @@ function startFishFrenzy() {
     b.addEventListener('click', () => { over = true; clearInterval(spawnTimer); clearInterval(clockTimer); }));
 }
 
-/* ---------- Kitten Match: pair each problem with its answer ---------- */
-function startKittenMatch() {
+/* ---------- Whisker Dash: auto-runner — jump blocks, answer math gates ---------- */
+function startWhiskerDash() {
   const tables = unlockedTables();
-  const PAIRS = 6;
-  const facts = Engine.pickFacts(state, tables, PAIRS);
-  // ensure unique products so every problem has exactly one matching answer
-  const seen = new Set();
-  for (let i = 0; i < facts.length; i++) {
-    let [a, b] = facts[i];
-    let guard = 0;
-    while (seen.has(a * b) && guard < 30) {
-      [[a, b]] = Engine.pickFacts(state, tables, 1);
-      guard++;
-    }
-    facts[i] = [a, b];
-    seen.add(a * b);
-  }
+  const SEGMENTS = 3;
+  const OBST_PER_SEG = 7;
+  const CAT_X = 80;          // cat's fixed screen x
+  const CAT_W = 40, CAT_H = 44;
+  const GRAVITY = 2400;      // px/s^2
+  const JUMP_V = -860;       // px/s
+  let speed = 280;           // px/s, +12% per segment
 
-  const cards = [];
-  facts.forEach(([a, b], i) => {
-    cards.push({ id: i, label: `${a} × ${b}`, value: a * b, kind: 'q' });
-    cards.push({ id: i, label: String(a * b), value: a * b, kind: 'a' });
-  });
-  cards.sort(() => Math.random() - 0.5);
-
-  let flipped = [];
-  let matched = 0;
-  let moves = 0;
-  let lock = false;
+  let offset = 0;            // world scroll position
+  let segStartOffset = 0;    // checkpoint to restart from after a crash
+  let catY = 0, velY = 0;    // 0 = on ground, negative = up
+  let segment = 0;
+  let obstacles = [];        // {worldX, w, h, el}
+  let gate = null;           // {worldX, el, fact}
+  let finishX = null;
+  let alive = true, paused = false, won = false;
+  let crashes = 0, firstTryGates = 0, gateTries = 0;
+  let lastT = 0, raf = 0;
 
   app.innerHTML = `
-    <div class="screen screen-match">
-      ${header('🃏 Kitten Match', 'map')}
-      <p class="hint-text center">Flip two cards: match each problem with its answer!</p>
-      <div class="match-grid" id="matchGrid">
-        ${cards.map((c, i) => `
-          <button class="match-card" data-i="${i}">
-            <span class="card-front">🐱</span>
-            <span class="card-back ${c.kind}">${c.label}</span>
-          </button>`).join('')}
+    <div class="screen screen-dash">
+      ${header('🏃 Whisker Dash', 'map')}
+      <div class="dash-hud">
+        <div class="dash-progress"><i id="dashBar"></i></div>
+        <span class="chip" id="dashSeg">Part 1 of ${SEGMENTS}</span>
       </div>
-      <div class="match-hud"><span class="chip" id="movesChip">Flips: 0</span></div>
+      <div class="dash-area" id="dashArea">
+        <div class="dash-clouds"><i></i><i></i></div>
+        <div class="dash-track" id="dashTrack"></div>
+        <div class="dash-cat" id="dashCat">${catSVG('excited', 60)}</div>
+        <div class="dash-ground"></div>
+      </div>
+      <p class="hint-text center">Tap, click, or press SPACE to jump over the blocks! At a math gate, answer to run on!</p>
     </div>`;
   wireCommon();
+  const area = $('#dashArea');
+  const track = $('#dashTrack');
+  const catEl = $('#dashCat');
+  const groundY = () => area.clientHeight - 44; // top of ground strip
 
-  $('#matchGrid').addEventListener('click', (e) => {
-    const el = e.target.closest('.match-card');
-    if (!el || lock || el.classList.contains('matched') || el.classList.contains('flipped')) return;
-    Sound.play('tap');
-    el.classList.add('flipped');
-    flipped.push(el);
-    if (flipped.length < 2) return;
-
-    moves += 1;
-    $('#movesChip').textContent = `Flips: ${moves}`;
-    const [c1, c2] = flipped.map((f) => cards[+f.dataset.i]);
-    lock = true;
-    if (c1.value === c2.value && c1.kind !== c2.kind) {
-      Sound.play('correct');
-      flipped.forEach((f) => f.classList.add('matched'));
-      matched += 1;
-      flipped = [];
-      lock = false;
-      if (matched === PAIRS) finishMatch(moves);
-    } else {
-      Sound.play('wrong');
-      setTimeout(() => {
-        flipped.forEach((f) => f.classList.remove('flipped'));
-        flipped = [];
-        lock = false;
-      }, 900);
+  function buildSegment() {
+    track.querySelectorAll('.dash-obst, .dash-gate, .dash-flag').forEach((el) => el.remove());
+    obstacles = [];
+    let x = offset + Math.max(area.clientWidth, 700) + 200;
+    for (let i = 0; i < OBST_PER_SEG; i++) {
+      const h = 26 + Math.floor(Math.random() * 3) * 12;       // 26-50px tall
+      const w = Math.random() < 0.25 ? 64 : 34;                 // some double-wide
+      const el = document.createElement('div');
+      el.className = 'dash-obst';
+      el.style.width = w + 'px';
+      el.style.height = h + 'px';
+      track.appendChild(el);
+      obstacles.push({ worldX: x, w, h, el });
+      x += 360 + Math.random() * 320 + speed * 0.25;            // jumpable gaps
     }
-  });
+    if (segment < SEGMENTS) {
+      const el = document.createElement('div');
+      el.className = 'dash-gate';
+      el.innerHTML = '<span>🔒</span>';
+      track.appendChild(el);
+      gate = { worldX: x + 250, el, fact: Engine.pickFacts(state, tables, 1)[0] };
+      finishX = null;
+    } else {
+      const el = document.createElement('div');
+      el.className = 'dash-flag';
+      el.textContent = '🏁';
+      track.appendChild(el);
+      gate = null;
+      finishX = x + 250;
+    }
+  }
 
-  function finishMatch(totalMoves) {
-    const reward = Math.max(2, 10 - (totalMoves - PAIRS));
+  function layout() {
+    const gy = groundY();
+    for (const o of obstacles) {
+      o.el.style.left = (o.worldX - offset) + 'px';
+      o.el.style.top = (gy - o.h) + 'px';
+    }
+    if (gate) {
+      gate.el.style.left = (gate.worldX - offset) + 'px';
+      gate.el.style.top = (gy - 110) + 'px';
+    }
+    const flag = track.querySelector('.dash-flag');
+    if (flag && finishX !== null) {
+      flag.style.left = (finishX - offset) + 'px';
+      flag.style.top = (gy - 64) + 'px';
+    }
+    catEl.style.left = CAT_X + 'px';
+    catEl.style.top = (gy - CAT_H + catY) + 'px';
+    catEl.classList.toggle('air', catY < -2);
+    const totalLen = (SEGMENTS + 1) * OBST_PER_SEG * 560;
+    $('#dashBar').style.width = Math.min(100, (offset / totalLen) * 100) + '%';
+  }
+
+  function jump() {
+    if (!alive || paused || won) return;
+    if (catY >= 0) { velY = JUMP_V; Sound.play('catch'); }
+  }
+
+  function crash() {
+    crashes += 1;
+    Sound.play('wrong');
+    alive = false;
+    catEl.classList.add('crashed');
+    area.classList.add('shake');
+    setTimeout(() => {
+      catEl.classList.remove('crashed');
+      area.classList.remove('shake');
+      offset = segStartOffset;
+      catY = 0; velY = 0;
+      alive = true;
+    }, 700);
+  }
+
+  function step(t) {
+    if (!document.getElementById('dashArea')) { cancelAnimationFrame(raf); return; }
+    raf = requestAnimationFrame(step);
+    const dt = Math.min((t - lastT) / 1000, 0.04);
+    lastT = t;
+    if (paused || !alive || won) return;
+
+    offset += speed * dt;
+    velY += GRAVITY * dt;
+    catY = Math.min(0, catY + velY * dt);
+    if (catY === 0) velY = Math.min(velY, 0);
+
+    // collision (forgiving hitbox)
+    const catBox = { x: CAT_X + 8, w: CAT_W - 16, top: catY - CAT_H + 8 };
+    for (const o of obstacles) {
+      const ox = o.worldX - offset;
+      if (ox < catBox.x + catBox.w && ox + o.w > catBox.x && catBox.top + CAT_H - 8 > -o.h) {
+        crash();
+        layout();
+        return;
+      }
+    }
+
+    if (gate && gate.worldX - offset < CAT_X + 70) { openMathGate(); return; }
+    if (finishX !== null && finishX - offset < CAT_X + 50) { winDash(); return; }
+    layout();
+  }
+
+  function openMathGate() {
+    paused = true;
+    gateTries = 0;
+    const [a, b] = gate.fact;
+    const overlay = document.createElement('div');
+    overlay.className = 'dialog-overlay';
+    overlay.innerHTML = `
+      <div class="dialog bounce-in">
+        <div class="dialog-head">
+          <span class="dialog-emoji">🔒</span>
+          <div><h3>Math Gate!</h3><p class="dialog-line" id="dialogLine">Answer to open the gate and keep running!</p></div>
+        </div>
+        <div class="question-card">
+          <div class="question-text"><span>${a}</span> × <span>${b}</span> = <span class="answer-slot" id="answerSlot">?</span></div>
+          <div class="hint-area" id="hintArea"></div>
+          <div class="numpad" id="numpad">
+            ${[1,2,3,4,5,6,7,8,9].map((n) => `<button class="pad-key" data-key="${n}">${n}</button>`).join('')}
+            <button class="pad-key pad-clear" data-key="clear">⌫</button>
+            <button class="pad-key" data-key="0">0</button>
+            <button class="pad-key pad-go" data-key="go">GO!</button>
+          </div>
+        </div>
+      </div>`;
+    document.querySelector('.screen-dash').appendChild(overlay);
+
+    let entry = '';
+    const slot = overlay.querySelector('#answerSlot');
+    const line = overlay.querySelector('#dialogLine');
+    const setEntry = (v) => {
+      entry = v.slice(0, 3);
+      slot.textContent = entry || '?';
+      slot.classList.toggle('filled', !!entry);
+    };
+    const pass = () => {
+      overlay.remove();
+      gate.el.innerHTML = '<span>✨</span>';
+      gate.el.classList.add('open');
+      const passedGate = gate.el;
+      setTimeout(() => passedGate.remove(), 900);
+      gate = null;
+      segment += 1;
+      speed *= 1.12;
+      segStartOffset = offset;       // checkpoint!
+      $('#dashSeg').textContent = segment < SEGMENTS ? `Part ${segment + 1} of ${SEGMENTS}` : 'Final stretch!';
+      buildSegment();
+      paused = false;
+    };
+    const submit = () => {
+      const value = parseInt(entry, 10);
+      gateTries += 1;
+      const firstTry = gateTries === 1;
+      if (value === a * b) {
+        Engine.recordAnswer(state, a, b, true, firstTry);
+        if (firstTry) firstTryGates += 1;
+        state.fish += firstTry ? 2 : 1;
+        saveNow();
+        Sound.play('correct');
+        slot.classList.add('correct');
+        line.textContent = `${pick(PRAISE)} The gate is open!`;
+        setTimeout(pass, 900);
+      } else {
+        Engine.recordAnswer(state, a, b, false, firstTry);
+        saveNow();
+        Sound.play('wrong');
+        slot.classList.add('wrong');
+        setTimeout(() => { slot.classList.remove('wrong', 'filled'); slot.textContent = '?'; entry = ''; }, 600);
+        if (gateTries === 1) {
+          line.textContent = pick(ENCOURAGE);
+          showHint(a, b);
+        } else {
+          line.textContent = `That's okay! ${a} × ${b} = ${a * b} — gate's open, keep running! 💛`;
+          overlay.querySelector('#hintArea').innerHTML = '';
+          setTimeout(pass, 1800);
+        }
+      }
+    };
+    overlay.querySelector('#numpad').addEventListener('click', (e) => {
+      const btn = e.target.closest('.pad-key');
+      if (!btn) return;
+      if (btn.dataset.key === 'clear') { Sound.play('tap'); setEntry(entry.slice(0, -1)); }
+      else if (btn.dataset.key === 'go') { if (entry) submit(); }
+      else { Sound.play('tap'); setEntry(entry + btn.dataset.key); }
+    });
+    const keyHandler = (e) => {
+      if (!document.contains(slot)) { document.removeEventListener('keydown', keyHandler); return; }
+      if (e.key >= '0' && e.key <= '9') { Sound.play('tap'); setEntry(entry + e.key); }
+      else if (e.key === 'Backspace') setEntry(entry.slice(0, -1));
+      else if (e.key === 'Enter' && entry) submit();
+    };
+    document.addEventListener('keydown', keyHandler);
+  }
+
+  function winDash() {
+    won = true;
+    cancelAnimationFrame(raf);
+    const reward = 5 + firstTryGates * 3;
     state.fish += reward;
     saveNow();
     Sound.play('win');
-    confetti(50);
-    setTimeout(() => {
-      $('#matchGrid').insertAdjacentHTML('afterend', `
-        <div class="result-card bounce-in">
-          <h2>All matched! 🎉</h2>
-          <p class="result-line">${totalMoves} flips — 🐟 +${reward} treats!</p>
-          <div class="result-buttons">
-            <button class="btn btn-big btn-primary" id="againBtn">↻ Play Again</button>
-            <button class="btn btn-big" data-go="map">🗺️ Back to Map</button>
-          </div>
-        </div>`);
-      $('#againBtn').addEventListener('click', startKittenMatch);
-      wireCommon();
-    }, 600);
+    confetti();
+    area.insertAdjacentHTML('beforeend', `
+      <div class="result-card bounce-in pond-result">
+        <div>${catSVG('excited', 110)}</div>
+        <h2>You made it! 🏁</h2>
+        <p class="result-line">${firstTryGates} of ${SEGMENTS} gates on the first try!</p>
+        <p class="result-line">🐟 +${reward} treats!</p>
+        <div class="result-buttons">
+          <button class="btn btn-big btn-primary" id="againBtn">↻ Run Again</button>
+          <button class="btn btn-big" data-go="map">🗺️ Back to Map</button>
+        </div>
+      </div>`);
+    $('#againBtn').addEventListener('click', startWhiskerDash);
+    wireCommon();
   }
+
+  // controls
+  area.addEventListener('pointerdown', jump);
+  const keyHandler = (e) => {
+    if (!document.getElementById('dashArea')) { document.removeEventListener('keydown', keyHandler); return; }
+    if (paused) return;
+    if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w') { e.preventDefault(); jump(); }
+  };
+  document.addEventListener('keydown', keyHandler);
+
+  buildSegment();
+  layout();
+  lastT = performance.now();
+  raf = requestAnimationFrame(step);
 }
