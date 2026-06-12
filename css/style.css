@@ -693,14 +693,19 @@ h3 { margin: 26px 0 10px; font-size: 1.25rem; }
 }
 .dash-clouds i:nth-child(1) { top: 28px; left: -120px; }
 .dash-clouds i:nth-child(2) { top: 80px; left: -120px; animation-delay: -11s; transform: scale(.7); }
-.dash-ground {
+.dash-track { position: absolute; inset: 0; }
+.dash-groundseg {
   position: absolute;
-  left: 0; right: 0; bottom: 0;
   height: 44px;
   background: repeating-linear-gradient(90deg, #8bc06b 0 36px, #82b863 36px 72px);
   border-top: 4px solid #6da554;
 }
-.dash-track { position: absolute; inset: 0; }
+.dash-pit {
+  position: absolute;
+  height: 40px;
+  background: linear-gradient(180deg, #3a2c1c 0%, #241b10 60%, #150f08 100%);
+  box-shadow: inset 0 6px 8px rgba(0,0,0,.55);
+}
 .dash-obst {
   position: absolute;
   background: linear-gradient(180deg, #c8754a, #a85a35);
@@ -708,7 +713,15 @@ h3 { margin: 26px 0 10px; font-size: 1.25rem; }
   border-radius: 8px;
   box-shadow: inset 0 4px 0 rgba(255,255,255,.25);
 }
-.dash-cat { position: absolute; width: 60px; transition: none; }
+.dash-spike {
+  position: absolute;
+  width: 0; height: 0;
+  border-left: 16px solid transparent;
+  border-right: 16px solid transparent;
+  border-bottom: 38px solid #b9483f;
+  filter: drop-shadow(0 2px 1px rgba(0,0,0,.25));
+}
+.dash-cat { position: absolute; width: 60px; transition: none; z-index: 2; }
 .dash-cat svg { display: block; }
 .dash-cat.air { transform: rotate(-14deg); }
 .dash-cat.crashed { animation: crashSpin .65s ease-in both; }

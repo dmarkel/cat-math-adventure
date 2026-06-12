@@ -1,4 +1,4 @@
-/* Mini-games: Fish Frenzy and Kitten Match. Both use facts from unlocked zones. */
+/* Mini-games: Fish Frenzy and Whisker Dash. Both use facts from unlocked zones. */
 
 /* ---------- Fish Frenzy: click the fish carrying the right answer ---------- */
 function startFishFrenzy() {
@@ -100,26 +100,30 @@ function startFishFrenzy() {
     b.addEventListener('click', () => { over = true; clearInterval(spawnTimer); clearInterval(clockTimer); }));
 }
 
-/* ---------- Whisker Dash: auto-runner — jump blocks, answer math gates ---------- */
+/* ---------- Whisker Dash: runner with blocks, spikes, pits, and math gates ---------- */
 function startWhiskerDash() {
   const tables = unlockedTables();
   const SEGMENTS = 3;
-  const OBST_PER_SEG = 7;
-  const CAT_X = 80;          // cat's fixed screen x
-  const CAT_W = 40, CAT_H = 44;
-  const GRAVITY = 2400;      // px/s^2
-  const JUMP_V = -860;       // px/s
-  let speed = 280;           // px/s, +12% per segment
+  const HAZARDS_PER_SEG = 8;
+  const CAT_X = 80;             // cat's fixed screen x
+  const CAT_W = 40, CAT_H = 44; // collision box
+  const CAT_FOOT = 56;          // visual offset: cat svg's paws within the 60px render
+  const GRAVITY = 2400;         // px/s^2
+  const JUMP_V = -860;          // px/s
+  const PIT_DEPTH = 60;         // fall this far below ground = lost in the pit
+  let speed = 280;              // px/s, +12% per segment
 
-  let offset = 0;            // world scroll position
-  let segStartOffset = 0;    // checkpoint to restart from after a crash
-  let catY = 0, velY = 0;    // 0 = on ground, negative = up
+  let offset = 0;               // world scroll position
+  let segStartOffset = 0;       // checkpoint to restart from
+  let catY = 0, velY = 0;       // 0 = ground level, negative = up, positive = falling in a pit
   let segment = 0;
-  let obstacles = [];        // {worldX, w, h, el}
-  let gate = null;           // {worldX, el, fact}
+  let hazards = [];             // blocks + spikes: {worldX,w,h,hx,hw,hh,el}
+  let pits = [];                // {start,end,el}
+  let grounds = [];             // solid ground pieces: {x,w,el}
+  let gate = null;              // {worldX, el, fact}
   let finishX = null;
   let alive = true, paused = false, won = false;
-  let crashes = 0, firstTryGates = 0, gateTries = 0;
+  let firstTryGates = 0, gateTries = 0;
   let lastT = 0, raf = 0;
 
   app.innerHTML = `
@@ -133,53 +137,87 @@ function startWhiskerDash() {
         <div class="dash-clouds"><i></i><i></i></div>
         <div class="dash-track" id="dashTrack"></div>
         <div class="dash-cat" id="dashCat">${catSVG('excited', 60)}</div>
-        <div class="dash-ground"></div>
       </div>
-      <p class="hint-text center">Tap, click, or press SPACE to jump over the blocks! At a math gate, answer to run on!</p>
+      <p class="hint-text center">Tap or press SPACE to jump blocks, spikes, and pits! Answer the math gates to keep running!</p>
     </div>`;
   wireCommon();
   const area = $('#dashArea');
   const track = $('#dashTrack');
   const catEl = $('#dashCat');
-  const groundY = () => area.clientHeight - 44; // top of ground strip
+  const groundY = () => area.clientHeight - 44; // top of the ground
+
+  function addEl(cls) {
+    const el = document.createElement('div');
+    el.className = cls;
+    track.appendChild(el);
+    return el;
+  }
 
   function buildSegment() {
-    track.querySelectorAll('.dash-obst, .dash-gate, .dash-flag').forEach((el) => el.remove());
-    obstacles = [];
-    let x = offset + Math.max(area.clientWidth, 700) + 200;
-    for (let i = 0; i < OBST_PER_SEG; i++) {
-      const h = 26 + Math.floor(Math.random() * 3) * 12;       // 26-50px tall
-      const w = Math.random() < 0.25 ? 64 : 34;                 // some double-wide
-      const el = document.createElement('div');
-      el.className = 'dash-obst';
-      el.style.width = w + 'px';
-      el.style.height = h + 'px';
-      track.appendChild(el);
-      obstacles.push({ worldX: x, w, h, el });
-      x += 360 + Math.random() * 320 + speed * 0.25;            // jumpable gaps
+    track.innerHTML = '';
+    hazards = []; pits = []; grounds = [];
+    const viewW = Math.max(area.clientWidth, 700);
+    let x = offset + viewW + 160;
+    let gCursor = offset - 400; // solid ground starts well behind the cat
+
+    // hazard mix: always 2 pits, rest blocks/spikes shuffled
+    const types = ['pit', 'pit'];
+    for (let i = 2; i < HAZARDS_PER_SEG; i++) types.push(Math.random() < 0.5 ? 'block' : 'spike');
+    types.sort(() => Math.random() - 0.5);
+
+    for (const type of types) {
+      if (type === 'pit') {
+        const pw = 90 + Math.random() * 50; // always jumpable
+        grounds.push({ x: gCursor, w: x - gCursor, el: addEl('dash-groundseg') });
+        pits.push({ start: x, end: x + pw, el: addEl('dash-pit') });
+        gCursor = x + pw;
+        x += pw + 340 + Math.random() * 260 + speed * 0.2;
+      } else if (type === 'block') {
+        const h = 26 + Math.floor(Math.random() * 3) * 12;
+        const w = Math.random() < 0.25 ? 64 : 34;
+        hazards.push({ worldX: x, w, h, hx: x, hw: w, hh: h, el: addEl('dash-obst') });
+        x += 340 + Math.random() * 300 + speed * 0.25;
+      } else {
+        // spike: worldX is its center; forgiving triangle hitbox
+        hazards.push({ worldX: x, w: 32, h: 38, hx: x - 8, hw: 16, hh: 28, el: addEl('dash-spike') });
+        x += 340 + Math.random() * 300 + speed * 0.25;
+      }
     }
+
     if (segment < SEGMENTS) {
-      const el = document.createElement('div');
-      el.className = 'dash-gate';
-      el.innerHTML = '<span>🔒</span>';
-      track.appendChild(el);
-      gate = { worldX: x + 250, el, fact: Engine.pickFacts(state, tables, 1)[0] };
+      gate = { worldX: x + 220, el: addEl('dash-gate'), fact: Engine.pickFacts(state, tables, 1)[0] };
+      gate.el.innerHTML = '<span>🔒</span>';
       finishX = null;
+      grounds.push({ x: gCursor, w: gate.worldX + viewW * 2 - gCursor, el: addEl('dash-groundseg') });
     } else {
-      const el = document.createElement('div');
-      el.className = 'dash-flag';
-      el.textContent = '🏁';
-      track.appendChild(el);
       gate = null;
-      finishX = x + 250;
+      finishX = x + 220;
+      const flag = addEl('dash-flag');
+      flag.textContent = '🏁';
+      grounds.push({ x: gCursor, w: finishX + viewW * 2 - gCursor, el: addEl('dash-groundseg') });
     }
+    // hazards/gate/flag should paint above ground pieces
+    for (const o of hazards) track.appendChild(o.el);
+    if (gate) track.appendChild(gate.el);
   }
 
   function layout() {
     const gy = groundY();
-    for (const o of obstacles) {
-      o.el.style.left = (o.worldX - offset) + 'px';
+    for (const g of grounds) {
+      g.el.style.left = (g.x - offset) + 'px';
+      g.el.style.width = g.w + 'px';
+      g.el.style.top = gy + 'px';
+    }
+    for (const p of pits) {
+      p.el.style.left = (p.start - offset) + 'px';
+      p.el.style.width = (p.end - p.start) + 'px';
+      p.el.style.top = gy + 4 + 'px';
+    }
+    for (const o of hazards) {
+      const isSpike = o.el.classList.contains('dash-spike');
+      o.el.style.left = (o.worldX - offset - (isSpike ? 16 : 0)) + 'px';
       o.el.style.top = (gy - o.h) + 'px';
+      if (!isSpike) { o.el.style.width = o.w + 'px'; o.el.style.height = o.h + 'px'; }
     }
     if (gate) {
       gate.el.style.left = (gate.worldX - offset) + 'px';
@@ -191,19 +229,23 @@ function startWhiskerDash() {
       flag.style.top = (gy - 64) + 'px';
     }
     catEl.style.left = CAT_X + 'px';
-    catEl.style.top = (gy - CAT_H + catY) + 'px';
+    catEl.style.top = (gy - CAT_FOOT + catY) + 'px';
     catEl.classList.toggle('air', catY < -2);
-    const totalLen = (SEGMENTS + 1) * OBST_PER_SEG * 560;
+    const totalLen = (SEGMENTS + 1) * HAZARDS_PER_SEG * 560;
     $('#dashBar').style.width = Math.min(100, (offset / totalLen) * 100) + '%';
+  }
+
+  function supported() {
+    const cx = offset + CAT_X + CAT_W / 2;
+    return !pits.some((p) => cx > p.start + 10 && cx < p.end - 10);
   }
 
   function jump() {
     if (!alive || paused || won) return;
-    if (catY >= 0) { velY = JUMP_V; Sound.play('catch'); }
+    if (catY === 0 && supported()) { velY = JUMP_V; Sound.play('catch'); }
   }
 
   function crash() {
-    crashes += 1;
     Sound.play('wrong');
     alive = false;
     catEl.classList.add('crashed');
@@ -214,6 +256,7 @@ function startWhiskerDash() {
       offset = segStartOffset;
       catY = 0; velY = 0;
       alive = true;
+      layout();
     }, 700);
   }
 
@@ -226,18 +269,18 @@ function startWhiskerDash() {
 
     offset += speed * dt;
     velY += GRAVITY * dt;
-    catY = Math.min(0, catY + velY * dt);
-    if (catY === 0) velY = Math.min(velY, 0);
+    catY += velY * dt;
 
-    // collision (forgiving hitbox)
-    const catBox = { x: CAT_X + 8, w: CAT_W - 16, top: catY - CAT_H + 8 };
-    for (const o of obstacles) {
-      const ox = o.worldX - offset;
-      if (ox < catBox.x + catBox.w && ox + o.w > catBox.x && catBox.top + CAT_H - 8 > -o.h) {
-        crash();
-        layout();
-        return;
-      }
+    if (catY >= 0) {
+      if (supported()) { catY = 0; velY = 0; }
+      else if (catY > PIT_DEPTH) { crash(); return; } // fell into a pit
+    }
+
+    // collision with blocks and spikes (forgiving hitboxes)
+    const catL = CAT_X + 8, catR = CAT_X + CAT_W - 8;
+    for (const o of hazards) {
+      const ox = o.hx - offset;
+      if (ox < catR && ox + o.hw > catL && catY > -o.hh) { crash(); return; }
     }
 
     if (gate && gate.worldX - offset < CAT_X + 70) { openMathGate(); return; }
@@ -290,6 +333,7 @@ function startWhiskerDash() {
       segStartOffset = offset;       // checkpoint!
       $('#dashSeg').textContent = segment < SEGMENTS ? `Part ${segment + 1} of ${SEGMENTS}` : 'Final stretch!';
       buildSegment();
+      layout();
       paused = false;
     };
     const submit = () => {
